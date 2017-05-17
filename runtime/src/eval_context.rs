@@ -21,6 +21,7 @@ impl EvalContext {
             Inst::PushConstant(x) => self.push_constant(x),
             Inst::PushRelative(x) => self.push_relative(x),
             Inst::MakeApp => self.make_app(),
+            Inst::Unwind => self.unwind(),
             Inst::Slide(x) => self.slide(x),
             Inst::GetRight => self.get_right(),
             Inst::DebugPrintStack => self.print_stack(),
@@ -41,6 +42,28 @@ impl EvalContext {
         let right = self.pop();
         let left = self.pop();
         self.stack.push(Rc::new(Node::App(left, right)));
+    }
+
+    fn unwind(&mut self) {
+        enum UnwindResult {
+            Recurse(Rc<Node>),
+            Jump(usize),
+            Die,
+            DebugIgnore
+        }
+        let result: UnwindResult;
+        {
+            let top: &Node = self.stack.last().expect("stack underflow");
+            result = match *top {
+                Node::App(ref left, _) => UnwindResult::Recurse(left.clone()),
+                _ => UnwindResult::DebugIgnore,
+            };
+        }
+        match result {
+            UnwindResult::Recurse(x) => { self.stack.push(x); self.unwind(); },
+            UnwindResult::DebugIgnore => (),
+            _ => panic!("Not implemented")
+        };
     }
 
     fn slide(&mut self, n: usize) {
