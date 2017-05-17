@@ -22,6 +22,7 @@ impl EvalContext {
             Inst::PushRelative(x) => self.push_relative(x),
             Inst::MakeApp => self.make_app(),
             Inst::Slide(x) => self.slide(x),
+            Inst::GetRight => self.get_right(),
             Inst::DebugPrintStack => self.print_stack(),
         }
     }
@@ -49,6 +50,15 @@ impl EvalContext {
         self.stack.truncate(m - n);
         self.stack.push(top);
         // TODO: Update the app on top.
+    }
+
+    fn get_right(&mut self) {
+        let top = self.pop();
+        let right = match *top {
+            Node::App(_, ref right) => Some(right.clone()),
+            _ => None
+        }.expect("expected app");
+        self.stack.push(right);
     }
 
     fn print_stack(&self) {

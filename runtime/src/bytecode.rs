@@ -4,5 +4,6 @@ pub enum Inst {
     PushRelative(usize),
     MakeApp,
     Slide(usize),
+    GetRight,
     DebugPrintStack,
 }

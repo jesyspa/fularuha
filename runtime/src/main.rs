@@ -29,6 +29,8 @@ fn main() {
         } else if cmd.starts_with("Slide") {
             let cstr = cmd.split(' ').nth(1).expect("constant expected");
             inst = Inst::Slide(cstr.parse().expect("constant not numeric"));
+        } else if cmd == "GetRight" {
+            inst = Inst::GetRight;
         } else if cmd == "Exit" {
             println!("Bye!");
             return;
