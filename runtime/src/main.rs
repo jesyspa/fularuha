@@ -21,6 +21,9 @@ fn main() {
         } else if cmd.starts_with("PushConstant") {
             let cstr = cmd.split(' ').nth(1).expect("constant expected");
             inst = Inst::PushConstant(cstr.parse().expect("constant not numeric"));
+        } else if cmd.starts_with("PushRelative") {
+            let cstr = cmd.split(' ').nth(1).expect("constant expected");
+            inst = Inst::PushRelative(cstr.parse().expect("constant not numeric"));
         } else if cmd == "Print" {
             inst = Inst::DebugPrintStack;
         } else if cmd.starts_with("Slide") {

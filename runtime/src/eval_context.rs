@@ -1,13 +1,14 @@
+use std::rc::Rc;
 use bytecode::Inst;
 
 #[derive(Debug)]
 enum Node {
-    App(Box<Node>, Box<Node>),
+    App(Rc<Node>, Rc<Node>),
     Num(i32),
 }
 
 pub struct EvalContext {
-    stack: Vec<Box<Node>>,
+    stack: Vec<Rc<Node>>,
 }
 
 impl EvalContext {
@@ -18,6 +19,7 @@ impl EvalContext {
     pub fn eval(&mut self, inst: Inst) {
         match inst {
             Inst::PushConstant(x) => self.push_constant(x),
+            Inst::PushRelative(x) => self.push_relative(x),
             Inst::MakeApp => self.make_app(),
             Inst::Slide(x) => self.slide(x),
             Inst::DebugPrintStack => self.print_stack(),
@@ -25,13 +27,19 @@ impl EvalContext {
     }
 
     fn push_constant(&mut self, c: i32) {
-        self.stack.push(Box::new(Node::Num(c)));
+        self.stack.push(Rc::new(Node::Num(c)));
+    }
+
+    fn push_relative(&mut self, n: usize) {
+        let m = self.stack.len();
+        let copy = self.stack[m - 1 - n].clone();
+        self.stack.push(copy);
     }
 
     fn make_app(&mut self) {
         let right = self.pop();
         let left = self.pop();
-        self.stack.push(Box::new(Node::App(left, right)));
+        self.stack.push(Rc::new(Node::App(left, right)));
     }
 
     fn slide(&mut self, n: usize) {
@@ -50,7 +58,7 @@ impl EvalContext {
         }
     }
 
-    fn pop(&mut self) -> Box<Node> {
+    fn pop(&mut self) -> Rc<Node> {
         self.stack.pop().expect("stack underflow")
     }
 }
