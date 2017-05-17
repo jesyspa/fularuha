@@ -48,5 +48,33 @@ fn main() {
         Inst::Slide(2),
         Inst::Unwind,
     ];
+
+    let code_simplified = vec![
+        Inst::PushConstant(2),
+        Inst::PushConstant(3),
+        Inst::PushJump(15),
+        Inst::MakeApp,
+        Inst::MakeApp,
+        Inst::PushJump(8),
+        Inst::MakeApp,
+        Inst::Unwind,
+        // 8: f x = x * x
+        Inst::PushRelative(1),
+        Inst::GetRight,
+        Inst::Eval,
+        Inst::PushRelative(0),
+        Inst::ExecBuiltin(Op::Mul),
+        Inst::Slide(2),
+        Inst::Return,
+        // 15: + (optimised)
+        Inst::PushRelative(1),
+        Inst::GetRight,
+        Inst::PushRelative(3),
+        Inst::GetRight,
+        Inst::ExecBuiltin(Op::Add),
+        Inst::Slide(3),
+        Inst::Return,
+    ];
     evaluate(&code);
+    evaluate(&code_simplified);
 }
