@@ -4,4 +4,5 @@ name = "fularuha_runtime"
 version = "0.0.1"
 authors = [ "Anton Golov <jesyspa@gmail.com> " ]
 
-
+[dependencies]
+clippy = {version = "*", optional = true}

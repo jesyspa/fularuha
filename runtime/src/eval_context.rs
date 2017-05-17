@@ -1,30 +1,49 @@
 use std::rc::Rc;
-use bytecode::Inst;
+use bytecode::{Inst, Op};
 
 #[derive(Debug)]
 enum Node {
     App(Rc<Node>, Rc<Node>),
     Num(i32),
+    Jump(usize),
 }
 
-pub struct EvalContext {
+pub struct EvalContext<'a> {
     stack: Vec<Rc<Node>>,
+    code: &'a [Inst],
+    pc: usize,
+    running: bool,
 }
 
-impl EvalContext {
-    pub fn new() -> EvalContext {
-        EvalContext { stack: Vec::new() }
+impl<'a> EvalContext<'a> {
+    pub fn new(code: &[Inst]) -> EvalContext {
+        EvalContext { stack: Vec::new(), code, pc: 0, running: false, }
     }
 
     pub fn eval(&mut self, inst: Inst) {
         match inst {
             Inst::PushConstant(x) => self.push_constant(x),
             Inst::PushRelative(x) => self.push_relative(x),
+            Inst::PushJump(x) => self.push_jump(x),
             Inst::MakeApp => self.make_app(),
             Inst::Unwind => self.unwind(),
             Inst::Slide(x) => self.slide(x),
             Inst::GetRight => self.get_right(),
+            Inst::ExecBuiltin(op) => self.exec_builtin(op),
             Inst::DebugPrintStack => self.print_stack(),
+            Inst::Terminate => self.terminate(),
+        }
+    }
+
+    pub fn run(&mut self) {
+        self.running = true;
+        while self.running {
+            let pc = self.pc;
+            let inst = self.code[pc];
+            self.eval(inst);
+            if self.pc == pc {
+                self.pc += 1;
+            }
         }
     }
 
@@ -38,9 +57,13 @@ impl EvalContext {
         self.stack.push(copy);
     }
 
+    fn push_jump(&mut self, n: usize) {
+        self.stack.push(Rc::new(Node::Jump(n)));
+    }
+
     fn make_app(&mut self) {
-        let right = self.pop();
         let left = self.pop();
+        let right = self.pop();
         self.stack.push(Rc::new(Node::App(left, right)));
     }
 
@@ -49,20 +72,19 @@ impl EvalContext {
             Recurse(Rc<Node>),
             Jump(usize),
             Die,
-            DebugIgnore
         }
-        let result: UnwindResult;
-        {
+        let result = {
             let top: &Node = self.stack.last().expect("stack underflow");
-            result = match *top {
+            match *top {
                 Node::App(ref left, _) => UnwindResult::Recurse(left.clone()),
-                _ => UnwindResult::DebugIgnore,
-            };
-        }
+                Node::Jump(target) => UnwindResult::Jump(target),
+                _ => UnwindResult::Die,
+            }
+        };
         match result {
             UnwindResult::Recurse(x) => { self.stack.push(x); self.unwind(); },
-            UnwindResult::DebugIgnore => (),
-            _ => panic!("Not implemented")
+            UnwindResult::Jump(target) => { self.stack.pop(); self.pc = target; },
+            UnwindResult::Die => panic!("invalid application"),
         };
     }
 
@@ -84,11 +106,32 @@ impl EvalContext {
         self.stack.push(right);
     }
 
+    fn exec_builtin(&mut self, op: Op) {
+        match op {
+            Op::Add => {
+                let a = match *self.pop() {
+                    Node::Num(x) => Some(x),
+                    _ => None,
+                }.expect("adding non-number");
+                let b = match *self.pop() {
+                    Node::Num(x) => Some(x),
+                    _ => None,
+                }.expect("adding non-number");
+                let total = Rc::new(Node::Num(a+b));
+                self.stack.push(total);
+            }
+        };
+    }
+
     fn print_stack(&self) {
         println!("Vector contents:");
         for n in &self.stack {
             println!("-> {:?}", n);
         }
+    }
+
+    fn terminate(&mut self) {
+        self.running = false;
     }
 
     fn pop(&mut self) -> Rc<Node> {
