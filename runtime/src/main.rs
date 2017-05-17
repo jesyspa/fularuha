@@ -1,35 +1,52 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
+mod evaluator;
+use evaluator::evaluate;
 mod eval_context;
-use eval_context::EvalContext;
 mod bytecode;
 use bytecode::{Inst, Op};
 
 fn main() {
     let code = vec![
-        Inst::PushConstant(9),
-        Inst::PushConstant(5),
+        Inst::PushConstant(2),
+        Inst::PushConstant(3),
         Inst::PushJump(8),
-        Inst::DebugPrintStack,
         Inst::MakeApp,
         Inst::MakeApp,
-        Inst::DebugPrintStack,
+        Inst::PushJump(26),
+        Inst::MakeApp,
         Inst::Unwind,
-        // Execution jumps elsewhere
-        Inst::DebugPrintStack,
-        Inst::PushRelative(0),
+        // 8: Add
+        Inst::PushRelative(1),
+        Inst::GetRight,
+        Inst::Eval,
+        Inst::PushRelative(3),
+        Inst::GetRight,
+        Inst::Eval,
+        Inst::ExecBuiltin(Op::Add),
+        Inst::Slide(3),
+        Inst::Return,
+        // 17: Mul
+        Inst::PushRelative(1),
+        Inst::GetRight,
+        Inst::Eval,
+        Inst::PushRelative(3),
+        Inst::GetRight,
+        Inst::Eval,
+        Inst::ExecBuiltin(Op::Mul),
+        Inst::Slide(3),
+        Inst::Return,
+        // 26: f x = x * x
+        Inst::PushRelative(1),
         Inst::GetRight,
         Inst::PushRelative(2),
         Inst::GetRight,
-        Inst::DebugPrintStack,
-        Inst::ExecBuiltin(Op::Add),
-        Inst::DebugPrintStack,
+        Inst::PushJump(17),
+        Inst::MakeApp,
+        Inst::MakeApp,
         Inst::Slide(2),
-        Inst::DebugPrintStack,
-        Inst::Terminate,
+        Inst::Unwind,
     ];
-    let mut ec = EvalContext::new(&code);
-
-    ec.run();
+    evaluate(&code);
 }
