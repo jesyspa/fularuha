@@ -19,6 +19,7 @@ impl EvalContext {
         match inst {
             Inst::PushConstant(x) => self.push_constant(x),
             Inst::MakeApp => self.make_app(),
+            Inst::Slide(x) => self.slide(x),
             Inst::DebugPrintStack => self.print_stack(),
         }
     }
@@ -28,15 +29,28 @@ impl EvalContext {
     }
 
     fn make_app(&mut self) {
-        let right = self.stack.pop().expect("stack underflow");
-        let left = self.stack.pop().expect("stack underflow");
+        let right = self.pop();
+        let left = self.pop();
         self.stack.push(Box::new(Node::App(left, right)));
+    }
+
+    fn slide(&mut self, n: usize) {
+        let top = self.pop();
+        let m = self.stack.len();
+        // NOTE: We want to error out if n is too big.
+        self.stack.truncate(m - n);
+        self.stack.push(top);
+        // TODO: Update the app on top.
     }
 
     fn print_stack(&self) {
         println!("Vector contents:");
         for n in &self.stack {
-            println!("{:?}", n);
+            println!("-> {:?}", n);
         }
+    }
+
+    fn pop(&mut self) -> Box<Node> {
+        self.stack.pop().expect("stack underflow")
     }
 }
