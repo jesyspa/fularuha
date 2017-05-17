@@ -1,8 +1,11 @@
 use std::io;
 mod eval_context;
+use eval_context::EvalContext;
+mod bytecode;
+use bytecode::Inst;
 
 fn main() {
-    let mut ec = eval_context::EvalContext::new();
+    let mut ec = EvalContext::new();
 
     loop {
         let mut cmd = String::new();
@@ -11,15 +14,22 @@ fn main() {
 
         let cmd = cmd.trim();
 
+        let inst : Inst;
+
         if cmd == "MkApp" {
-            ec.make_app();
+            inst = Inst::MakeApp;
         } else if cmd.starts_with("PushConstant") {
             let cstr = cmd.split(' ').nth(1).expect("constant expected");
-            ec.push_constant(cstr.parse().expect("constant not numeric"));
+            inst = Inst::PushConstant(cstr.parse().expect("constant not numeric"));
         } else if cmd == "Print" {
-            ec.print_stack();
+            inst = Inst::DebugPrintStack;
+        } else if cmd == "Exit" {
+            println!("Bye!");
+            return;
         } else {
             println!("Unknown command: {}", cmd);
+            continue;
         }
+        ec.eval(inst);
     }
 }
