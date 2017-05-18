@@ -14,6 +14,7 @@ pub enum Op {
 pub enum Inst {
     PushConstant(i32),
     PushRelative(usize),
+    PushRelativeRight(usize),
     PushJump(usize),
     MakeApp,
     Unwind,
@@ -22,6 +23,7 @@ pub enum Inst {
     ExecBuiltin(Op),
     Return,
     Eval,
+    EvalRelative(usize),
     DebugPrintStack,
     Terminate,
 }

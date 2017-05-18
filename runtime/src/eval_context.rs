@@ -6,6 +6,7 @@ pub enum Node {
     App(Rc<Node>, Rc<Node>),
     Num(i32),
     Jump(usize),
+    Indirect(Rc<Node>)
 }
 
 #[derive(Debug)]
@@ -36,6 +37,7 @@ impl<'a> EvalContext<'a> {
         match inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
             Inst::PushRelative(x) => { self.push_relative(x); None },
+            Inst::PushRelativeRight(x) => { self.push_relative(x); self.get_right(); None },
             Inst::PushJump(x) => { self.push_jump(x); None },
             Inst::MakeApp => { self.make_app(); None },
             Inst::Unwind => { self.unwind(); None },
@@ -44,6 +46,7 @@ impl<'a> EvalContext<'a> {
             Inst::ExecBuiltin(op) => { self.exec_builtin(op); None },
             Inst::Return => Some(self.return_root()),
             Inst::Eval => self.nest_eval(),
+            Inst::EvalRelative(x) =>  { self.push_relative(x); self.get_right(); self.nest_eval() },
             Inst::DebugPrintStack => { self.print_stack(); None },
             Inst::Terminate => Some(Response::Terminate),
         }
