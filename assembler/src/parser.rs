@@ -46,6 +46,7 @@ peg! parser(r#"
         / KEYWORD<"equal"> { Op::Equal }
         / KEYWORD<"less than"> { Op::LessThan }
         / KEYWORD<"branch"> { Op::Branch }
+        / KEYWORD<"print"> { Op::Print }
         / #expected("built-in operation")
     KEYWORD<E> = e:E ![a-zA-Z$] WHITESPACE* { e }
     WHITESPACE = #quiet<[ \t]>
