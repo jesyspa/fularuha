@@ -1,4 +1,4 @@
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone,Copy,Serialize,Deserialize)]
 pub enum Op {
     Add,
     Sub,
@@ -9,7 +9,7 @@ pub enum Op {
 }
 
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone,Copy,Serialize,Deserialize)]
 pub enum Inst {
     PushConstant(i32),
     PushRelative(usize),

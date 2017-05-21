@@ -6,3 +6,5 @@ authors = [ "Anton Golov <jesyspa@gmail.com> " ]
 
 [dependencies]
 clippy = {version = "*", optional = true}
+serde = {version = ">= 1.0.7"}
+serde_derive = {version = ">= 1.0.7"}
