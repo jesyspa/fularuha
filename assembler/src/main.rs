@@ -6,7 +6,6 @@
 
 extern crate fularuha_bytecode;
 use fularuha_bytecode::defs as bytecode;
-use bytecode::Inst;
 
 mod asm;
 mod parser;
@@ -31,14 +30,11 @@ fn main() {
         infile.read_to_string(&mut contents).expect("read failed");
         let parsed_input = parse(&contents);
 
-        println!("Parse result: {:?}", parsed_input);
         let assembled_output = assemble(&parsed_input);
-        println!("Assembly result: {:?}", assembled_output);
 
         let mut outfile = File::create("output.json").expect("failed to open file");
         let json = serde_json::to_string(&assembled_output).expect("failed to encode");
         outfile.write(json.as_bytes()).expect("write failed");
-        println!("Done!");
     }
 }
 

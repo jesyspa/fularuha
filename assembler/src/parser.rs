@@ -14,14 +14,14 @@ peg! parser(r#"
         = stmt*
 
     stmt -> Stmt
-        = KEYWORD<"label"> ident:IDENTIFIER WHITESPACE* "\n" { Stmt::Label(ident) }
+        = KEYWORD<"label"> ident:IDENTIFIER WHITESPACE* ":" WHITESPACE* "\n" { Stmt::Label(ident) }
         / KEYWORD<"push goto"> ident:IDENTIFIER WHITESPACE* "\n" { Stmt::PushLabelJump(ident) }
         / ri:raw_inst WHITESPACE* "\n" { Stmt::RawInst(ri) }
 
     raw_inst -> Inst
         = KEYWORD<"push constant"> n:num_i32 { Inst::PushConstant(n) }
         / KEYWORD<"push relative"> n:num_usize { Inst::PushRelative(n) }
-        / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelative(n) }
+        / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelativeRight(n) }
         / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n) }
         / KEYWORD<"make app"> { Inst::MakeApp }
         / KEYWORD<"unwind"> { Inst::Unwind }
@@ -29,8 +29,8 @@ peg! parser(r#"
         / KEYWORD<"get right"> { Inst::GetRight }
         / KEYWORD<"exec builtin"> op:oper { Inst::ExecBuiltin(op) }
         / KEYWORD<"return"> { Inst::Return }
-        / KEYWORD<"eval"> { Inst::Eval }
         / KEYWORD<"eval relative"> n:num_usize { Inst::EvalRelative(n) }
+        / KEYWORD<"eval"> { Inst::Eval }
         / KEYWORD<"debug print stack"> { Inst::DebugPrintStack }
         / KEYWORD<"terminate"> { Inst::Terminate }
 
@@ -50,5 +50,5 @@ peg! parser(r#"
     KEYWORD<E> = e:E ![a-zA-Z$] WHITESPACE* { e }
     WHITESPACE = #quiet<[ \t]>
     IDENTIFIER -> String
-        = s:$(#quiet<[a-zA-Z$][a-zA-Z0-9_]+>) { String::from(s) } / #expected("identifier")
+        = s:$(#quiet<[a-zA-Z$][a-zA-Z0-9_]*>) { String::from(s) } / #expected("identifier")
 "#);

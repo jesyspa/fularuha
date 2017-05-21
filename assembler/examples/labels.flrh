@@ -1,0 +1,20 @@
+push constant 2
+push constant 3
+push goto plus
+make app
+make app
+push goto f
+make app
+unwind
+label f:
+eval relative 1
+push relative 0
+exec builtin mul
+slide 2
+return
+label plus:
+push right of relative 1
+push right of relative 3
+exec builtin add
+slide 3
+return
