@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use bytecode::{Inst, Op};
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Node {
     App(Rc<Node>, Rc<Node>),
     Num(i32),
@@ -28,7 +28,8 @@ impl<'a> EvalContext<'a> {
     }
 
     pub fn new_from_tree(code: &[Inst], node: Rc<Node>) -> EvalContext {
-        let mut ctx = EvalContext { stack: vec![node], code, pc: 0 };
+        let mut ctx = EvalContext::new(code);
+        ctx.push(node);
         ctx.unwind();
         ctx
     }
@@ -111,7 +112,7 @@ impl<'a> EvalContext<'a> {
     fn slide(&mut self, n: usize) {
         let top = self.pop();
         let m = self.stack.len();
-        // NOTE: We want to error out if n is too big.
+        assert!(m >= n, "sliding too far");
         self.stack.truncate(m - n);
         self.push(top);
         // TODO: Update the app on top.

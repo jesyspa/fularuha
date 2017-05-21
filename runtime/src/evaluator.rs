@@ -1,7 +1,8 @@
-use eval_context::*;
+use std::rc::Rc;
 use bytecode::Inst;
+use eval_context::*;
 
-pub fn evaluate(code: &[Inst]) {
+pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
     let mut contexts: Vec<EvalContext> = Vec::new();
     contexts.push(EvalContext::new(code));
     while !contexts.is_empty() {
@@ -11,13 +12,12 @@ pub fn evaluate(code: &[Inst]) {
             response = context.run();
         }
         match response {
-            Response::Terminate => { println!("Terminate called"); return },
+            Response::Terminate => { println!("Terminate called"); return None },
             Response::Return(node) => {
                 contexts.pop();
                 let context: &mut EvalContext;
                 if contexts.is_empty() {
-                    println!("Final result: {:?}", node);
-                    return;
+                    return Some(node);
                 } else {
                     context = contexts.last_mut().expect("logic error");
                 }
@@ -28,4 +28,6 @@ pub fn evaluate(code: &[Inst]) {
             },
         }
     }
+    None
 }
+
