@@ -5,7 +5,8 @@ pub enum Op {
     Mul,
     Equal,
     LessThan,
-    Branch
+    Branch,
+    Print
 }
 
 

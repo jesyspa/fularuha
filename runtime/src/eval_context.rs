@@ -158,6 +158,10 @@ impl<'a> EvalContext<'a> {
                 let if_false = self.pop();
                 self.push(if c != 0 { if_true } else { if_false });
             }
+            Op::Print => {
+                let a = self.pop_num();
+                println!("{}", a);
+            }
         };
     }
 
