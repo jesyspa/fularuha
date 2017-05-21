@@ -1,0 +1,4 @@
+true x y = x;
+false x y = y;
+if b x y = b x y;
+main = $print (if true 5 7)

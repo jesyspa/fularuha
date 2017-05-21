@@ -1,0 +1,3 @@
+id x = x;
+main = app id 5;
+app f x = $print (f x)

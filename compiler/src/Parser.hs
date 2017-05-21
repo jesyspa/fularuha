@@ -18,11 +18,11 @@ lexer = Tok.makeTokenParser $ Tok.LanguageDef {
     Tok.commentEnd = "-}",
     Tok.commentLine = "--",
     Tok.nestedComments = True,
-    Tok.identStart = letter,
+    Tok.identStart = letter <|> char '$',
     Tok.identLetter = alphaNum <|> char '_',
     Tok.opStart = oper,
     Tok.opLetter = oper,
-    Tok.reservedNames = ["let", "in", "case", "of"],
+    Tok.reservedNames = ["let", "in", "case", "of", "print"],
     Tok.reservedOpNames = ["="],
     Tok.caseSensitive = True
 }
@@ -31,6 +31,7 @@ parens = Tok.parens lexer
 integer = Tok.integer lexer
 semiSep = Tok.semiSep lexer
 reservedOp = Tok.reservedOp lexer
+reserved  = Tok.reserved lexer
 identifier = Tok.identifier lexer
 whitespace = Tok.whiteSpace lexer
 
@@ -53,6 +54,6 @@ var :: Parsec String u Var
 var = identifier
 
 parse :: String -> FileAST
-parse s = case P.parse file "stdin" s of
+parse s = case P.parse (file <* eof) "stdin" s of
     Left e -> error $ show e
     Right x -> x

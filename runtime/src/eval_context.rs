@@ -40,7 +40,7 @@ impl<'a> EvalContext<'a> {
             Inst::PushRelativeRight(x) => { self.push_relative(x); self.get_right(); None },
             Inst::PushJump(x) => { self.push_jump(x); None },
             Inst::MakeApp => { self.make_app(); None },
-            Inst::Unwind => { self.unwind(); None },
+            Inst::Unwind => self.unwind(),
             Inst::Slide(x) => { self.slide(x); None },
             Inst::GetRight => { self.get_right(); None },
             Inst::ExecBuiltin(op) => { self.exec_builtin(op); None },
@@ -86,7 +86,26 @@ impl<'a> EvalContext<'a> {
         self.push(Rc::new(Node::App(left, right)));
     }
 
-    fn unwind(&mut self) {
+    fn unwind(&mut self) -> Option<Response> {
+        // This is a dirty hack.  If we see that all we have is a numeric value, we simply return
+        // it.  The problem is that we're not sure, when we evaluate a value, whether we'll end up
+        // wanting to evaluate it or just treat it as-is.
+        //
+        // TODO: At least get rid of the unnecessary clone.
+        let node = self.pop();
+        if let Node::Num(_) = *node {
+            // Ensure we aren't trying to apply this number to something.
+            // That would be even crazier than this hack.
+            assert!(self.stack.is_empty());
+            Some(Response::Return(node.clone()))
+        } else {
+            self.push(node.clone());
+            self.unwind_rec();
+            None
+        }
+    }
+
+    fn unwind_rec(&mut self) {
         enum UnwindResult {
             Recurse(Rc<Node>),
             Jump(usize),

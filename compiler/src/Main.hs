@@ -9,8 +9,6 @@ main :: IO ()
 main = do
     xs <- getContents
     let ast = parse xs
-    print ast
-    let asm = compile ast
-    print asm
-    putStrLn . render . vcat $ map ppASM asm
+    let code = compile ast
+    putStrLn . render . vcat . map ppASM $ code
 
