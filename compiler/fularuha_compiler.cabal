@@ -1,0 +1,17 @@
+-- vim: set textwidth=80:
+name: fularuha-compiler
+version: 0.0.1
+synopsis: A toy compiler for a toy programming language
+license: PublicDomain
+author: Anton Golov
+stability: nonexistent
+build-type: Simple
+cabal-version: >= 1.22
+
+executable main
+  main-is: Main.hs
+  build-depends: base, parsec
+  hs-source-dirs: src/
+  ghc-options: -Wall
+  default-language: Haskell2010
+  extensions: NoMonomorphismRestriction

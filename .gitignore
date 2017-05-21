@@ -2,3 +2,6 @@
 *.lock
 target/
 output.json
+cabal.sandbox.config
+.cabal-sandbox
+dist
