@@ -60,9 +60,8 @@ impl<'a> EvalContext<'a> {
             if self.pc == pc {
                 self.pc += 1;
             }
-            match response {
-                Some(r) => return r,
-                None => (),
+            if let Some(r) = response {
+                return r
             }
         }
     }
