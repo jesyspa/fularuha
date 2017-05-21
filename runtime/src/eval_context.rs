@@ -6,7 +6,6 @@ pub enum Node {
     App(Rc<Node>, Rc<Node>),
     Num(i32),
     Jump(usize),
-    Indirect(Rc<Node>)
 }
 
 #[derive(Debug)]

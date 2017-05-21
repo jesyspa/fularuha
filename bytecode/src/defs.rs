@@ -1,5 +1,4 @@
 #[derive(Debug,Clone,Copy)]
-#[allow(dead_code)] // We'll get around to it.
 pub enum Op {
     Add,
     Sub,

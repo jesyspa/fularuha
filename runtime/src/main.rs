@@ -1,11 +1,11 @@
 #![cfg_attr(feature="clippy", feature(plugin))]
 #![cfg_attr(feature="clippy", plugin(clippy))]
 
+extern crate fularuha_bytecode;
+use fularuha_bytecode::defs as bytecode;
+
 mod evaluator;
-use evaluator::evaluate;
 mod eval_context;
-mod bytecode;
-use bytecode::{Inst, Op};
 #[cfg(test)]
 mod tests;
 

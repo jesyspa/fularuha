@@ -1,9 +1,8 @@
 [package]
 
-name = "fularuha_runtime"
+name = "fularuha_bytecode"
 version = "0.0.1"
 authors = [ "Anton Golov <jesyspa@gmail.com> " ]
 
 [dependencies]
-fularuha_bytecode = { path = "../bytecode" }
 clippy = {version = "*", optional = true}
