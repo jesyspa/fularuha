@@ -1,0 +1,4 @@
+push constant 5
+push constant 7
+exec builtin add
+return

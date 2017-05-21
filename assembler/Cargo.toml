@@ -1,0 +1,12 @@
+[package]
+
+name = "fularuha_assembler"
+version = "0.0.1"
+authors = [ "Anton Golov <jesyspa@gmail.com> " ]
+
+[dependencies]
+fularuha_bytecode = { path = "../bytecode" }
+clippy = {version = "*", optional = true}
+serde = {version = "*"}
+serde_json = {version = "*"}
+peg-syntax-ext = {version = "*"}

@@ -1,3 +1,4 @@
 *.swp
 *.lock
 target/
+output.json
