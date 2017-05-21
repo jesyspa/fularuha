@@ -32,13 +32,12 @@ integer = Tok.integer lexer
 semiSep = Tok.semiSep lexer
 reservedOp = Tok.reservedOp lexer
 identifier = Tok.identifier lexer
-operator = Tok.operator lexer
 whitespace = Tok.whiteSpace lexer
 
 file :: Parsec String u FileAST
 file = File <$ whitespace <*> semiSep decl
 decl :: Parsec String u DeclAST
-decl = VarDecl <$> var <*> many var <* reservedOp "=" <*> expr
+decl = Decl <$> var <*> many var <* reservedOp "=" <*> expr
 expr :: Parsec String u ExprAST
 expr = Ex.buildExpressionParser table exprPart
 exprPart :: Parsec String u ExprAST
