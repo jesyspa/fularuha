@@ -1,8 +1,12 @@
 *.swp
 *.lock
-target/
-output.json
+
 cabal.sandbox.config
 .cabal-sandbox
-dist
+
+target/
+dist/
+temp_files/
+
+output.json
 output.flbc
