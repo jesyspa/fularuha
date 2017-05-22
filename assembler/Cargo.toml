@@ -10,3 +10,4 @@ clippy = {version = "*", optional = true}
 serde = {version = "*"}
 serde_json = {version = "*"}
 peg-syntax-ext = {version = "*"}
+clap = {version = "*"}
