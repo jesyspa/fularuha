@@ -28,6 +28,7 @@ ppOp Branch   = text "branch"
 data ASM = Label String
          | PushLabelJump String
          | PushConstant Integer
+         | PushBoolConstant Bool
          | PushRelative Integer
          | MakeApp
          | Unwind
@@ -43,6 +44,7 @@ ppASM :: ASM -> Doc
 ppASM (Label xs) = text "label" <+> text xs <> char ':'
 ppASM (PushLabelJump xs) = text "push goto" <+> text xs
 ppASM (PushConstant i) = text "push constant" <+> integer i
+ppASM (PushBoolConstant b) = text "push bool constant" <+> text (if b then "true" else "false")
 ppASM (PushRelative i) = text "push relative" <+> integer i
 ppASM MakeApp = text "make app"
 ppASM Unwind = text "unwind"

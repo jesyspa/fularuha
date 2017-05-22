@@ -18,6 +18,7 @@ compExpr xs n (VarUse x) = case elemIndex x xs of
                                 Just i -> [PushRelative $ fromIntegral $ n+i+1, GetRight]
                                 Nothing -> [PushLabelJump x]
 compExpr _ _  (Num i) = [PushConstant i]
+compExpr _ _  (Bool b) = [PushBoolConstant b]
 
 binaryOp :: String -> Op -> [ASM]
 binaryOp name op =
@@ -51,6 +52,7 @@ strictDefs =
     , PushRelative 3
     , GetRight
     , Eval
+    , ExecBuiltin Branch
     , Slide 4
     , Return
     ] ++ concatMap (uncurry binaryOp) [("$mul", Mul), ("$add", Add), ("$sub", Sub), ("$less_than", LessThan), ("$equal", Equal)]

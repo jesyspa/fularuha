@@ -22,6 +22,14 @@ pub struct EvalContext<'a> {
     pc: usize,
 }
 
+fn is_whnf(node: &Rc<Node>) -> bool {
+    match **node {
+        Node::Num(_) => true,
+        Node::Bool(_) => true,
+        _ => false
+    }
+}
+
 impl<'a> EvalContext<'a> {
     pub fn new(code: &[Inst]) -> EvalContext {
         EvalContext { stack: Vec::new(), code, pc: 0 }
@@ -56,6 +64,7 @@ impl<'a> EvalContext<'a> {
 
     pub fn run(&mut self) -> Response {
         loop {
+            self.print_stack();
             let pc = self.pc;
             let inst = self.code[pc];
             let response = self.eval(inst);
@@ -93,13 +102,6 @@ impl<'a> EvalContext<'a> {
     }
 
     fn unwind(&mut self) -> Option<Response> {
-        fn is_whnf(node: &Rc<Node>) -> bool {
-            match **node {
-                Node::Num(_) => true,
-                Node::Bool(_) => true,
-                _ => false
-            }
-        }
         if is_whnf(self.top()) {
             let node = self.pop();
             assert!(self.stack.is_empty());
@@ -195,14 +197,7 @@ impl<'a> EvalContext<'a> {
     }
 
     fn nest_eval(&mut self) -> Option<Response> {
-        let act = {
-            let a = self.top();
-            match **a {
-                Node::Num(_) => false,
-                _ => true
-            }
-        };
-        if act {
+        if !is_whnf(self.top()) {
             Some(Response::RequestEval(self.pop()))
         } else {
             None
@@ -243,4 +238,5 @@ impl<'a> EvalContext<'a> {
             panic!("expected number");
         }
     }
+
 }

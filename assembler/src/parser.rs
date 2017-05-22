@@ -20,6 +20,7 @@ peg! parser(r#"
 
     raw_inst -> Inst
         = KEYWORD<"push constant"> n:num_i32 { Inst::PushConstant(n) }
+        / KEYWORD<"push bool constant"> b:bool { Inst::PushBoolConstant(b) }
         / KEYWORD<"push relative"> n:num_usize { Inst::PushRelative(n) }
         / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelativeRight(n) }
         / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n) }
@@ -48,6 +49,9 @@ peg! parser(r#"
         / KEYWORD<"branch"> { Op::Branch }
         / KEYWORD<"print"> { Op::Print }
         / #expected("built-in operation")
+    bool -> bool
+        = KEYWORD<"true"> { true }
+        / KEYWORD<"false"> { false }
     KEYWORD<E> = e:E ![a-zA-Z$] WHITESPACE* { e }
     WHITESPACE = #quiet<[ \t]>
     IDENTIFIER -> String

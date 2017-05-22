@@ -28,7 +28,7 @@ lexer = Tok.makeTokenParser $ Tok.LanguageDef {
 }
 
 parens = Tok.parens lexer
-integer = Tok.integer lexer
+natural = Tok.natural lexer
 semiSep = Tok.semiSep lexer
 reservedOp = Tok.reservedOp lexer
 reserved  = Tok.reserved lexer
@@ -40,12 +40,14 @@ file = File <$ whitespace <*> semiSep decl
 decl :: Parsec String u DeclAST
 decl = Decl <$> var <*> many var <* reservedOp "=" <*> expr
 expr :: Parsec String u ExprAST
-expr = Ex.buildExpressionParser table exprPart
+expr = Ex.buildExpressionParser table exprSeq
+exprSeq :: Parsec String u ExprAST
+exprSeq = chainl1 exprPart (return FunApl)
 exprPart :: Parsec String u ExprAST
 exprPart = parens expr
         <|> VarUse <$> var
-        <|> reserved "true" *> pure (Bool True)
-        <|> reserved "false" *> pure (Bool False)
+        <|> reserved "true" *> return (Bool True)
+        <|> reserved "false" *> return (Bool False)
         <|> (\x y z -> FunApl (FunApl (FunApl (VarUse "$branch") x) y) z)
             <$ reserved "if"
             <*> expr
@@ -53,10 +55,9 @@ exprPart = parens expr
             <*> expr
             <* reserved "else"
             <*> expr
-        <|> Num <$> integer
+        <|> Num <$> natural
 
-table = [ [ Infix (whitespace >> return FunApl) AssocLeft]
-        , [ Infix (opParser "*" "$mul") AssocLeft]
+table = [ [ Infix (opParser "*" "$mul") AssocLeft]
         , [ Infix (opParser "+" "$add") AssocLeft
           , Infix (opParser "-" "$sub") AssocLeft]
         , [ Infix (opParser "==" "$equal") AssocNone
