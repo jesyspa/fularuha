@@ -10,7 +10,7 @@ cabal-version: >= 1.22
 
 executable main
   main-is: Main.hs
-  build-depends: base, parsec, pretty
+  build-depends: base, parsec, pretty, optparse-applicative
   hs-source-dirs: src/
   ghc-options: -Wall
   default-language: Haskell2010

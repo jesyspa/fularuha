@@ -1,7 +1,7 @@
 module Assembly (
     Op(..),
     ASM(..),
-    ppASM
+    ppASMs
 ) where
 
 import Text.PrettyPrint
@@ -40,3 +40,6 @@ ppASM Eval = text "eval"
 ppASM GetRight = text "get right"
 ppASM Return = text "return"
 ppASM Terminate = text "terminate"
+
+ppASMs :: [ASM] -> Doc
+ppASMs xs = vcat (map ppASM xs) <> char '\n'
