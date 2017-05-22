@@ -13,6 +13,7 @@ pub enum Op {
 #[derive(Debug,Clone,Copy,Serialize,Deserialize)]
 pub enum Inst {
     PushConstant(i32),
+    PushBoolConstant(bool),
     PushRelative(usize),
     PushRelativeRight(usize),
     PushJump(usize),

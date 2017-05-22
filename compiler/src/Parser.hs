@@ -23,7 +23,7 @@ lexer = Tok.makeTokenParser $ Tok.LanguageDef {
     Tok.opStart = oper,
     Tok.opLetter = oper,
     Tok.reservedNames = ["let", "in", "case", "of", "print"],
-    Tok.reservedOpNames = ["="],
+    Tok.reservedOpNames = ["=", "*", "+", "-", "<="],
     Tok.caseSensitive = True
 }
 
@@ -48,7 +48,14 @@ exprPart = parens expr
 
 table = [
         [Infix (whitespace >> return FunApl) AssocLeft]
+        [Infix (opParser "*" "$mul") AssocLeft]
+        [Infix (opParser "+" "$plus") AssocLeft
+        ,Infix (opParser "-" "$sub") AssocLeft
+        ,Infix (opParser "==" "$equal" AssocNone)
+        ,Infix (opParser "<=" "$less_than" AssocNone)]
     ]
+    where funAppl2 c x y = FunAppl (FunAppl (VarUse c) x) y
+          opParser sym name = reservedOp "*" >> return (funAppl2 name)
 
 var :: Parsec String u Var
 var = identifier

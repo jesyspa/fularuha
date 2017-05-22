@@ -5,6 +5,7 @@ use bytecode::{Inst, Op};
 pub enum Node {
     App(Rc<Node>, Rc<Node>),
     Num(i32),
+    Bool(bool),
     Jump(usize),
 }
 
@@ -36,6 +37,7 @@ impl<'a> EvalContext<'a> {
     pub fn eval(&mut self, inst: Inst) -> Option<Response> {
         match inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
+            Inst::PushBoolConstant(x) => { self.push_bool_constant(x); None },
             Inst::PushRelative(x) => { self.push_relative(x); None },
             Inst::PushRelativeRight(x) => { self.push_relative(x); self.get_right(); None },
             Inst::PushJump(x) => { self.push_jump(x); None },
@@ -70,6 +72,10 @@ impl<'a> EvalContext<'a> {
         self.push(Rc::new(Node::Num(c)));
     }
 
+    fn push_bool_constant(&mut self, c: bool) {
+        self.push(Rc::new(Node::Bool(c)));
+    }
+
     fn push_relative(&mut self, n: usize) {
         let m = self.stack.len();
         let copy = self.stack[m - 1 - n].clone();
@@ -87,19 +93,18 @@ impl<'a> EvalContext<'a> {
     }
 
     fn unwind(&mut self) -> Option<Response> {
-        // This is a dirty hack.  If we see that all we have is a numeric value, we simply return
-        // it.  The problem is that we're not sure, when we evaluate a value, whether we'll end up
-        // wanting to evaluate it or just treat it as-is.
-        //
-        // TODO: At least get rid of the unnecessary clone.
-        let node = self.pop();
-        if let Node::Num(_) = *node {
-            // Ensure we aren't trying to apply this number to something.
-            // That would be even crazier than this hack.
+        fn is_whnf(node: &Rc<Node>) -> bool {
+            match **node {
+                Node::Num(_) => true,
+                Node::Bool(_) => true,
+                _ => false
+            }
+        }
+        if is_whnf(self.top()) {
+            let node = self.pop();
             assert!(self.stack.is_empty());
-            Some(Response::Return(node.clone()))
+            Some(Response::Return(node))
         } else {
-            self.push(node.clone());
             self.unwind_rec();
             None
         }
@@ -164,18 +169,18 @@ impl<'a> EvalContext<'a> {
             Op::Equal => {
                 let a = self.pop_num();
                 let b = self.pop_num();
-                self.push(Rc::new(Node::Num(if a == b { 1 } else { 0 })));
+                self.push(Rc::new(Node::Bool(a == b)));
             }
             Op::LessThan => {
                 let a = self.pop_num();
                 let b = self.pop_num();
-                self.push(Rc::new(Node::Num(if a < b { 1 } else { 0 })));
+                self.push(Rc::new(Node::Bool(a < b)));
             }
             Op::Branch => {
-                let c = self.pop_num();
+                let c = self.pop_bool();
                 let if_true = self.pop();
                 let if_false = self.pop();
-                self.push(if c != 0 { if_true } else { if_false });
+                self.push(if c { if_true } else { if_false });
             }
             Op::Print => {
                 let a = self.pop_num();
@@ -224,9 +229,18 @@ impl<'a> EvalContext<'a> {
     }
 
     fn pop_num(&mut self) -> i32 {
-        match *self.pop() {
-            Node::Num(x) => Some(x),
-            _ => None,
-        }.expect("expected number")
+        if let Node::Num(x) = *self.pop() {
+            x
+        } else {
+            panic!("expected number");
+        }
+    }
+
+    fn pop_bool(&mut self) -> bool {
+        if let Node::Bool(x) = *self.pop() {
+            x
+        } else {
+            panic!("expected number");
+        }
     }
 }
