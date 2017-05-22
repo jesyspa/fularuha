@@ -16,6 +16,7 @@ data DeclAST = Decl Var [Var] ExprAST
 data ExprAST = FunApl ExprAST ExprAST
              | VarUse Var
              | Num Integer
+             | Bool Bool
              deriving (Eq, Ord, Read, Show)
 
 

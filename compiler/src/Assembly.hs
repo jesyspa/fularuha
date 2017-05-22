@@ -7,10 +7,22 @@ module Assembly (
 import Text.PrettyPrint
 
 data Op = Print
+        | Add
+        | Mul
+        | Sub
+        | Equal
+        | LessThan
+        | Branch
         deriving (Eq, Ord, Read, Show)
 
 ppOp :: Op -> Doc
-ppOp Print = text "print"
+ppOp Print    = text "print"
+ppOp Add      = text "add"
+ppOp Mul      = text "mul"
+ppOp Sub      = text "sub"
+ppOp Equal    = text "equal"
+ppOp LessThan = text "less than"
+ppOp Branch   = text "branch"
 
 
 data ASM = Label String

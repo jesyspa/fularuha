@@ -5,3 +5,4 @@ output.json
 cabal.sandbox.config
 .cabal-sandbox
 dist
+output.flbc

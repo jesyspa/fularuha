@@ -19,14 +19,38 @@ compExpr xs n (VarUse x) = case elemIndex x xs of
                                 Nothing -> [PushLabelJump x]
 compExpr _ _  (Num i) = [PushConstant i]
 
-strictDefs :: [ASM]
-strictDefs = [
-        Label "$print",
-        PushRelative 1,
-        GetRight,
-        Eval,
-        PushRelative 0,
-        ExecBuiltin Print,
-        Slide 2,
-        Return
+binaryOp :: String -> Op -> [ASM]
+binaryOp name op =
+    [ Label name
+    , PushRelative 1
+    , GetRight
+    , Eval
+    , PushRelative 3
+    , GetRight
+    , Eval
+    , ExecBuiltin op
+    , Slide 3
+    , Return
     ]
+
+strictDefs :: [ASM]
+strictDefs =
+    [ Label "$print"
+    , PushRelative 1
+    , GetRight
+    , Eval
+    , PushRelative 0
+    , ExecBuiltin Print
+    , Slide 2
+    , Return
+    , Label "$branch"
+    , PushRelative 3
+    , GetRight
+    , PushRelative 3
+    , GetRight
+    , PushRelative 3
+    , GetRight
+    , Eval
+    , Slide 4
+    , Return
+    ] ++ concatMap (uncurry binaryOp) [("$mul", Mul), ("$add", Add), ("$sub", Sub), ("$less_than", LessThan), ("$equal", Equal)]

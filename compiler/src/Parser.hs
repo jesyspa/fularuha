@@ -22,8 +22,8 @@ lexer = Tok.makeTokenParser $ Tok.LanguageDef {
     Tok.identLetter = alphaNum <|> char '_',
     Tok.opStart = oper,
     Tok.opLetter = oper,
-    Tok.reservedNames = ["let", "in", "case", "of", "print"],
-    Tok.reservedOpNames = ["=", "*", "+", "-", "<="],
+    Tok.reservedNames = ["let", "in", "case", "of", "print", "true", "false", "if", "then", "else"],
+    Tok.reservedOpNames = ["=", "==", "*", "+", "-", "<"],
     Tok.caseSensitive = True
 }
 
@@ -44,18 +44,25 @@ expr = Ex.buildExpressionParser table exprPart
 exprPart :: Parsec String u ExprAST
 exprPart = parens expr
         <|> VarUse <$> var
+        <|> reserved "true" *> pure (Bool True)
+        <|> reserved "false" *> pure (Bool False)
+        <|> (\x y z -> FunApl (FunApl (FunApl (VarUse "$branch") x) y) z)
+            <$ reserved "if"
+            <*> expr
+            <* reserved "then"
+            <*> expr
+            <* reserved "else"
+            <*> expr
         <|> Num <$> integer
 
-table = [
-        [Infix (whitespace >> return FunApl) AssocLeft]
-        [Infix (opParser "*" "$mul") AssocLeft]
-        [Infix (opParser "+" "$plus") AssocLeft
-        ,Infix (opParser "-" "$sub") AssocLeft
-        ,Infix (opParser "==" "$equal" AssocNone)
-        ,Infix (opParser "<=" "$less_than" AssocNone)]
-    ]
-    where funAppl2 c x y = FunAppl (FunAppl (VarUse c) x) y
-          opParser sym name = reservedOp "*" >> return (funAppl2 name)
+table = [ [ Infix (whitespace >> return FunApl) AssocLeft]
+        , [ Infix (opParser "*" "$mul") AssocLeft]
+        , [ Infix (opParser "+" "$add") AssocLeft
+          , Infix (opParser "-" "$sub") AssocLeft]
+        , [ Infix (opParser "==" "$equal") AssocNone
+          , Infix (opParser "<" "$less_than") AssocNone]]
+    where funAppl2 c x y = FunApl (FunApl (VarUse c) x) y
+          opParser sym name = reservedOp sym >> return (funAppl2 name)
 
 var :: Parsec String u Var
 var = identifier
