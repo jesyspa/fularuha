@@ -54,5 +54,5 @@ strictDefs =
     , Eval
     , ExecBuiltin Branch
     , Slide 4
-    , Return
+    , Unwind
     ] ++ concatMap (uncurry binaryOp) [("$mul", Mul), ("$add", Add), ("$sub", Sub), ("$less_than", LessThan), ("$equal", Equal)]

@@ -1,0 +1,2 @@
+gact = 0;
+main = $print (if false then 1 else gact)

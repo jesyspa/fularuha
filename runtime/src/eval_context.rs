@@ -43,6 +43,7 @@ impl<'a> EvalContext<'a> {
     }
 
     pub fn eval(&mut self, inst: Inst) -> Option<Response> {
+        println!("Executing: {:?}", inst);
         match inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
             Inst::PushBoolConstant(x) => { self.push_bool_constant(x); None },
