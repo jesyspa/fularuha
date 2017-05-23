@@ -16,10 +16,10 @@ pub fn assemble(code: &[Stmt]) -> Vec<Inst> {
     }
     for stmt in code {
         match *stmt {
-            Stmt::RawInst(ref x) => { result.push(*x); },
+            Stmt::RawInst(ref x) => { result.push(x.clone()); },
             Stmt::PushLabelJump(ref x) => {
                 let ix = labels[x.as_str()];
-                result.push(Inst::PushJump(ix));
+                result.push(Inst::PushJump(ix, x.clone()));
             },
             Stmt::Label(_) => ()
         };

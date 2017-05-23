@@ -4,13 +4,13 @@ use eval_context::*;
 
 pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
     let mut contexts: Vec<EvalContext> = Vec::new();
-    contexts.push(EvalContext::new(code));
+    contexts.push(EvalContext::new());
     let mut i = 0;
     while !contexts.is_empty() {
         let response: Response;
         {
             let context: &mut EvalContext = contexts.last_mut().expect("logic error");
-            response = context.run();
+            response = context.run(code);
         }
         match response {
             Response::Terminate => { println!("Terminate called"); return None },
@@ -27,7 +27,7 @@ pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
             },
             Response::RequestEval(node) => { 
                 println!("Evaluating: {:?}", node);
-                contexts.push(EvalContext::new_from_tree(code, node))
+                contexts.push(EvalContext::new_from_tree(node))
             },
         }
         i += 1;

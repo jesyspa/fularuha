@@ -23,7 +23,7 @@ peg! parser(r#"
         / KEYWORD<"push bool constant"> b:bool { Inst::PushBoolConstant(b) }
         / KEYWORD<"push relative"> n:num_usize { Inst::PushRelative(n) }
         / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelativeRight(n) }
-        / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n) }
+        / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n, String::from("$$")) }
         / KEYWORD<"make app"> { Inst::MakeApp }
         / KEYWORD<"unwind"> { Inst::Unwind }
         / KEYWORD<"slide"> n:num_usize { Inst::Slide(n) }

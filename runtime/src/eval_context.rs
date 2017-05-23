@@ -2,23 +2,22 @@ use std::rc::Rc;
 use bytecode::{Inst, Op};
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum Node {
-    App(Rc<Node>, Rc<Node>),
+pub enum Node<'a> {
+    App(Rc<Node<'a>>, Rc<Node<'a>>),
     Num(i32),
     Bool(bool),
-    Jump(usize),
+    Jump(usize, &'a str),
 }
 
 #[derive(Debug)]
-pub enum Response {
+pub enum Response<'a> {
     Terminate,
-    Return(Rc<Node>),
-    RequestEval(Rc<Node>),
+    Return(Rc<Node<'a>>),
+    RequestEval(Rc<Node<'a>>),
 }
 
 pub struct EvalContext<'a> {
-    stack: Vec<Rc<Node>>,
-    code: &'a [Inst],
+    stack: Vec<Rc<Node<'a>>>,
     pc: usize,
 }
 
@@ -31,25 +30,25 @@ fn is_whnf(node: &Rc<Node>) -> bool {
 }
 
 impl<'a> EvalContext<'a> {
-    pub fn new(code: &[Inst]) -> EvalContext {
-        EvalContext { stack: Vec::new(), code, pc: 0 }
+    pub fn new() -> EvalContext<'a> {
+        EvalContext { stack: Vec::new(), pc: 0 }
     }
 
-    pub fn new_from_tree(code: &[Inst], node: Rc<Node>) -> EvalContext {
-        let mut ctx = EvalContext::new(code);
+    pub fn new_from_tree(node: Rc<Node<'a>>) -> EvalContext<'a> {
+        let mut ctx = EvalContext::new();
         ctx.push(node);
         ctx.unwind();
         ctx
     }
 
-    pub fn eval(&mut self, inst: Inst) -> Option<Response> {
+    pub fn eval(&mut self, inst: &'a Inst) -> Option<Response<'a>> {
         println!("Executing: {:?}", inst);
-        match inst {
+        match *inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
             Inst::PushBoolConstant(x) => { self.push_bool_constant(x); None },
             Inst::PushRelative(x) => { self.push_relative(x); None },
             Inst::PushRelativeRight(x) => { self.push_relative(x); self.get_right(); None },
-            Inst::PushJump(x) => { self.push_jump(x); None },
+            Inst::PushJump(x, ref s) => { self.push_jump(x, s.as_str()); None },
             Inst::MakeApp => { self.make_app(); None },
             Inst::Unwind => self.unwind(),
             Inst::Slide(x) => { self.slide(x); None },
@@ -63,11 +62,11 @@ impl<'a> EvalContext<'a> {
         }
     }
 
-    pub fn run(&mut self) -> Response {
+    pub fn run(&mut self, code: &'a [Inst]) -> Response<'a> {
         loop {
             self.print_stack();
             let pc = self.pc;
-            let inst = self.code[pc];
+            let inst = &code[pc];
             let response = self.eval(inst);
             if self.pc == pc {
                 self.pc += 1;
@@ -92,8 +91,8 @@ impl<'a> EvalContext<'a> {
         self.push(copy);
     }
 
-    fn push_jump(&mut self, n: usize) {
-        self.push(Rc::new(Node::Jump(n)));
+    fn push_jump(&mut self, n: usize, s: &'a str) {
+        self.push(Rc::new(Node::Jump(n, s)));
     }
 
     fn make_app(&mut self) {
@@ -102,7 +101,7 @@ impl<'a> EvalContext<'a> {
         self.push(Rc::new(Node::App(left, right)));
     }
 
-    fn unwind(&mut self) -> Option<Response> {
+    fn unwind(&mut self) -> Option<Response<'a>> {
         if is_whnf(self.top()) {
             let node = self.pop();
             assert!(self.stack.is_empty());
@@ -114,22 +113,22 @@ impl<'a> EvalContext<'a> {
     }
 
     fn unwind_rec(&mut self) {
-        enum UnwindResult {
-            Recurse(Rc<Node>),
-            Jump(usize),
+        enum UnwindResult<'a> {
+            Recurse(Rc<Node<'a>>),
+            Jump(usize, &'a str),
             Die,
         }
         let result = {
             let top: &Node = self.stack.last().expect("stack underflow");
             match *top {
                 Node::App(ref left, _) => UnwindResult::Recurse(left.clone()),
-                Node::Jump(target) => UnwindResult::Jump(target),
+                Node::Jump(target, s) =>  UnwindResult::Jump(target, s),
                 _ => UnwindResult::Die,
             }
         };
         match result {
             UnwindResult::Recurse(x) => { self.push(x); self.unwind(); },
-            UnwindResult::Jump(target) => { self.pc = target; },
+            UnwindResult::Jump(target, s) => { println!("Jumping to {}", s); self.pc = target; },
             UnwindResult::Die => panic!("invalid application"),
         };
     }
@@ -192,12 +191,12 @@ impl<'a> EvalContext<'a> {
         };
     }
 
-    fn return_root(&mut self) -> Response {
+    fn return_root(&mut self) -> Response<'a> {
         assert_eq!(self.stack.len(), 1);
         Response::Return(self.pop())
     }
 
-    fn nest_eval(&mut self) -> Option<Response> {
+    fn nest_eval(&mut self) -> Option<Response<'a>> {
         if !is_whnf(self.top()) {
             Some(Response::RequestEval(self.pop()))
         } else {
@@ -220,15 +219,15 @@ impl<'a> EvalContext<'a> {
         }
     }
 
-    pub fn push(&mut self, node: Rc<Node>) {
+    pub fn push(&mut self, node: Rc<Node<'a>>) {
         self.stack.push(node);
     }
 
-    fn top(&self) -> &Rc<Node> {
+    fn top(&self) -> &Rc<Node<'a>> {
         self.stack.last().expect("stack underflow")
     }
 
-    fn pop(&mut self) -> Rc<Node> {
+    fn pop(&mut self) -> Rc<Node<'a>> {
         self.stack.pop().expect("stack underflow")
     }
 
