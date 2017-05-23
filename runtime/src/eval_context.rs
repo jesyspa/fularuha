@@ -207,8 +207,16 @@ impl<'a> EvalContext<'a> {
 
     fn print_stack(&self) {
         println!("Vector contents:");
-        for n in &self.stack {
-            println!("-> {:?}", n);
+        for (i, n) in self.stack.iter().enumerate() {
+            match **n {
+                Node::App(ref left, ref right) =>
+                    if i + 1 != self.stack.len() && self.stack[i+1] == *left {
+                        println!("-> App(..., {:?})", right);
+                    } else {
+                        println!("-> {:?}", n);
+                    },
+                _ => println!("-> {:?}", n)
+            }
         }
     }
 
