@@ -1,7 +1,7 @@
 use asm::Stmt;
 
 pub fn parse(input: &str) -> Vec<Stmt> {
-    parser::stmts(&input).expect("parse error")
+    parser::stmts(input).expect("parse error")
 }
 
 peg! parser(r#"
@@ -32,7 +32,6 @@ peg! parser(r#"
         / KEYWORD<"get right"> { Inst::GetRight }
         / KEYWORD<"exec builtin"> op:oper { Inst::ExecBuiltin(op) }
         / KEYWORD<"return"> { Inst::Return }
-        / KEYWORD<"eval relative"> n:num_usize { Inst::EvalRelative(n) }
         / KEYWORD<"eval"> { Inst::Eval }
         / KEYWORD<"debug print stack"> { Inst::DebugPrintStack }
         / KEYWORD<"terminate"> { Inst::Terminate }

@@ -11,28 +11,25 @@ impl DebugLog {
     }
 
     pub fn print_stack(&self, ec: &EvalContext, forced: bool) {
-        if !forced && self.verbosity <= 1 {
-            return;
+        if forced || self.verbosity > 1 {
+            ec.print_stack();
         }
-        ec.print_stack();
     }
 
     pub fn print_response(&self, response: &Response) {
-        if self.verbosity <= 0 {
-            return;
+        if self.verbosity > 0 {
+            match *response {
+                Response::Terminate => println!("Terminating"),
+                Response::Return(ref node) => println!("Returning: {:?}", node),
+                Response::RequestEval(ref node) => println!("Evaluating: {:?}", node),
+            };
         }
-        match *response {
-            Response::Terminate => println!("Terminating"),
-            Response::Return(ref node) => println!("Returning: {:?}", node),
-            Response::RequestEval(ref node) => println!("Evaluating: {:?}", node),
-        };
     }
 
     pub fn print_inst(&self, inst: &Inst) {
-        if self.verbosity <= 1 {
-            return;
+        if self.verbosity > 1 {
+            println!("Executing: {:?}", inst);
         }
-        println!("Executing: {:?}", inst);
     }
 
     pub fn print_eval_unnecessary(&self) {

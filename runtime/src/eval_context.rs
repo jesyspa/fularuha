@@ -28,9 +28,7 @@ pub struct EvalContext<'a> {
 
 fn is_whnf(node: &Rc<Node>) -> bool {
     match **node {
-        Node::Num(_) => true,
-        Node::Bool(_) => true,
-        Node::Struct(_, _) => true,
+        Node::Num(_) | Node::Bool(_) | Node::Struct(_, _) => true,
         _ => false
     }
 }
@@ -48,7 +46,7 @@ impl<'a> EvalContext<'a> {
     }
 
     pub fn eval(&mut self, inst: &'a Inst) -> Option<Response<'a>> {
-        self.log.print_inst(&inst);
+        self.log.print_inst(inst);
         match *inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
             Inst::PushBoolConstant(x) => { self.push_bool_constant(x); None },
@@ -64,15 +62,14 @@ impl<'a> EvalContext<'a> {
             Inst::ExecBuiltin(op) => { self.exec_builtin(op); None },
             Inst::Return => Some(self.return_root()),
             Inst::Eval => self.nest_eval(),
-            Inst::EvalRelative(x) =>  { self.push_relative(x); self.get_right(); self.nest_eval() },
-            Inst::DebugPrintStack => { self.log.print_stack(&self, true); None },
+            Inst::DebugPrintStack => { self.log.print_stack(self, true); None },
             Inst::Terminate => Some(Response::Terminate),
         }
     }
 
     pub fn run(&mut self, code: &'a [Inst]) -> Response<'a> {
         loop {
-            self.log.print_stack(&self, false);
+            self.log.print_stack(self, false);
             let pc = self.pc;
             let inst = &code[pc];
             let response = self.eval(inst);

@@ -47,6 +47,6 @@ fn main() {
     let outfile_name = matches.value_of("output").unwrap_or("output.json");
     let mut outfile = File::create(outfile_name).expect("failed to create file");
     let json = serde_json::to_string(&assembled_output).expect("failed to encode");
-    outfile.write(json.as_bytes()).expect("write failed");
+    outfile.write_all(json.as_bytes()).expect("write failed");
 }
 

@@ -28,7 +28,6 @@ pub enum Inst {
     ExecBuiltin(Op),
     Return,
     Eval,
-    EvalRelative(usize),
     DebugPrintStack,
     Terminate,
 }
