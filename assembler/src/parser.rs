@@ -22,8 +22,9 @@ peg! parser(r#"
         = KEYWORD<"push constant"> n:num_i32 { Inst::PushConstant(n) }
         / KEYWORD<"push bool constant"> b:bool { Inst::PushBoolConstant(b) }
         / KEYWORD<"push relative"> n:num_usize { Inst::PushRelative(n) }
-        / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelativeRight(n) }
         / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n, String::from("$$")) }
+        / KEYWORD<"push arg"> n:num_usize { Inst::PushArg(n) }
+        / KEYWORD<"push arg strict"> n:num_usize { Inst::PushArgStrict(n) }
         / KEYWORD<"mem alloc"> con:num_usize size:num_usize { Inst::MemAlloc(con, size) }
         / KEYWORD<"make app"> { Inst::MakeApp }
         / KEYWORD<"unwind"> { Inst::Unwind }

@@ -16,8 +16,9 @@ pub enum Inst {
     PushConstant(i32),
     PushBoolConstant(bool),
     PushRelative(usize),
-    PushRelativeRight(usize),
     PushJump(usize, String),
+    PushArg(usize),
+    PushArgStrict(usize),
     // Constructor, number of args
     MemAlloc(usize, usize),
     MakeApp,

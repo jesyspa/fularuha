@@ -32,6 +32,8 @@ data ASM = Label String
          | PushConstant Integer
          | PushBoolConstant Bool
          | PushRelative Integer
+         | PushArg Integer
+         | PushArgStrict Integer
          | MemAlloc Integer Integer
          | MakeApp
          | Unwind
@@ -49,6 +51,8 @@ ppASM (PushLabelJump xs) = text "push goto" <+> text xs
 ppASM (PushConstant i) = text "push constant" <+> integer i
 ppASM (PushBoolConstant b) = text "push bool constant" <+> text (if b then "true" else "false")
 ppASM (PushRelative i) = text "push relative" <+> integer i
+ppASM (PushArg i) = text "push arg" <+> integer i
+ppASM (PushArgStrict i) = text "push arg strict" <+> integer i
 ppASM (MemAlloc con size) = text "mem alloc" <+> integer con <+> integer size
 ppASM MakeApp = text "make app"
 ppASM Unwind = text "unwind"

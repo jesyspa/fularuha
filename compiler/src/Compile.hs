@@ -15,7 +15,7 @@ compDecl (Decl n args body) = Label n : compExpr args 0 body ++ [Slide (fromInte
 compExpr :: [Var] -> Int -> ExprAST -> [ASM]
 compExpr xs n (FunApl lhs rhs) = compExpr xs n rhs ++ compExpr xs (n+1) lhs ++ [MakeApp]
 compExpr xs n (VarUse x) = case elemIndex x xs of
-                                Just i -> [PushRelative $ fromIntegral $ n+i+1, GetRight]
+                                Just i -> [PushArg $ fromIntegral $ n+i+1]
                                 Nothing -> [PushLabelJump x]
 compExpr _ _  (Num i) = [PushConstant i]
 compExpr _ _  (Bool b) = [PushBoolConstant b]
@@ -23,12 +23,8 @@ compExpr _ _  (Bool b) = [PushBoolConstant b]
 binaryOp :: String -> Op -> [ASM]
 binaryOp name op =
     [ Label name
-    , PushRelative 2
-    , GetRight
-    , Eval
-    , PushRelative 2
-    , GetRight
-    , Eval
+    , PushArgStrict 2
+    , PushArgStrict 2
     , ExecBuiltin op
     , Slide 3
     , Return
@@ -37,30 +33,21 @@ binaryOp name op =
 strictDefs :: [ASM]
 strictDefs =
     [ Label "$print"
-    , PushRelative 1
-    , GetRight
-    , Eval
+    , PushArgStrict 1
     , PushRelative 0
     , ExecBuiltin Print
     , Slide 2
     , Return
     , Label "$branch"
-    , PushRelative 3
-    , GetRight
-    , PushRelative 3
-    , GetRight
-    , PushRelative 3
-    , GetRight
-    , Eval
+    , PushArg 3
+    , PushArg 3
+    , PushArgStrict 3
     , ExecBuiltin Branch
     , Slide 4
     , Unwind
     , Label "$seq"
-    , PushRelative 2
-    , GetRight
-    , Eval
-    , PushRelative 2
-    , GetRight
+    , PushArgStrict 2
+    , PushArg 2
     , MakeApp
     , Slide 3
     , Unwind
@@ -69,21 +56,15 @@ strictDefs =
     , Slide 1
     , Return
     , Label "$cons"
-    , PushRelative 2
-    , GetRight
-    , PushRelative 2
-    , GetRight
+    , PushArg 2
+    , PushArg 2
     , MemAlloc 1 2
     , Slide 3
     , Return
     , Label "$match_list"
-    , PushRelative 3
-    , GetRight
-    , PushRelative 3
-    , GetRight
-    , PushRelative 3
-    , GetRight
-    , Eval
+    , PushArg 3
+    , PushArg 3
+    , PushArgStrict 3
     , ExecBuiltin (Switch 2)
     , Slide 4
     , Unwind
