@@ -23,10 +23,10 @@ compExpr _ _  (Bool b) = [PushBoolConstant b]
 binaryOp :: String -> Op -> [ASM]
 binaryOp name op =
     [ Label name
-    , PushRelative 1
+    , PushRelative 2
     , GetRight
     , Eval
-    , PushRelative 3
+    , PushRelative 2
     , GetRight
     , Eval
     , ExecBuiltin op
