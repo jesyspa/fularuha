@@ -1,10 +1,11 @@
 use std::rc::Rc;
 use bytecode::Inst;
 use eval_context::*;
+use debug_log::DebugLog;
 
-pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
+pub fn evaluate<'a>(code: &'a [Inst], log: &'a DebugLog) -> Option<Rc<Node<'a>>> {
     let mut contexts: Vec<EvalContext> = Vec::new();
-    contexts.push(EvalContext::new());
+    contexts.push(EvalContext::new(log));
     let mut i = 0;
     while !contexts.is_empty() {
         let response: Response;
@@ -12,10 +13,10 @@ pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
             let context: &mut EvalContext = contexts.last_mut().expect("logic error");
             response = context.run(code);
         }
+        log.print_response(&response);
         match response {
-            Response::Terminate => { println!("Terminate called"); return None },
+            Response::Terminate => return None,
             Response::Return(node) => {
-                println!("Returning: {:?}", node);
                 contexts.pop();
                 let context: &mut EvalContext;
                 if contexts.is_empty() {
@@ -26,8 +27,7 @@ pub fn evaluate(code: &[Inst]) -> Option<Rc<Node>> {
                 context.push(node);
             },
             Response::RequestEval(node) => { 
-                println!("Evaluating: {:?}", node);
-                contexts.push(EvalContext::new_from_tree(node))
+                contexts.push(EvalContext::new_from_tree(log, node))
             },
         }
         i += 1;

@@ -9,3 +9,4 @@ fularuha_bytecode = { path = "../bytecode" }
 clippy = {version = "*", optional = true}
 serde = {version = "*"}
 serde_json = {version = "*"}
+clap = {version = "*"}

@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use bytecode::{Inst, Op};
+use debug_log::DebugLog;
 
 #[derive(Debug)]
 pub enum Node<'a> {
@@ -22,6 +23,7 @@ pub enum Response<'a> {
 pub struct EvalContext<'a> {
     stack: Vec<Rc<Node<'a>>>,
     pc: usize,
+    log: &'a DebugLog,
 }
 
 fn is_whnf(node: &Rc<Node>) -> bool {
@@ -34,19 +36,19 @@ fn is_whnf(node: &Rc<Node>) -> bool {
 }
 
 impl<'a> EvalContext<'a> {
-    pub fn new() -> EvalContext<'a> {
-        EvalContext { stack: Vec::new(), pc: 0 }
+    pub fn new(log: &'a DebugLog) -> EvalContext<'a> {
+        EvalContext { stack: Vec::new(), pc: 0, log }
     }
 
-    pub fn new_from_tree(node: Rc<Node<'a>>) -> EvalContext<'a> {
-        let mut ctx = EvalContext::new();
+    pub fn new_from_tree(log: &'a DebugLog, node: Rc<Node<'a>>) -> EvalContext<'a> {
+        let mut ctx = EvalContext::new(log);
         ctx.push(node);
         ctx.unwind();
         ctx
     }
 
     pub fn eval(&mut self, inst: &'a Inst) -> Option<Response<'a>> {
-        println!("Executing: {:?}", inst);
+        self.log.print_inst(&inst);
         match *inst {
             Inst::PushConstant(x) => { self.push_constant(x); None },
             Inst::PushBoolConstant(x) => { self.push_bool_constant(x); None },
@@ -63,14 +65,14 @@ impl<'a> EvalContext<'a> {
             Inst::Return => Some(self.return_root()),
             Inst::Eval => self.nest_eval(),
             Inst::EvalRelative(x) =>  { self.push_relative(x); self.get_right(); self.nest_eval() },
-            Inst::DebugPrintStack => { self.print_stack(); None },
+            Inst::DebugPrintStack => { self.log.print_stack(&self, true); None },
             Inst::Terminate => Some(Response::Terminate),
         }
     }
 
     pub fn run(&mut self, code: &'a [Inst]) -> Response<'a> {
         loop {
-            self.print_stack();
+            self.log.print_stack(&self, false);
             let pc = self.pc;
             let inst = &code[pc];
             let response = self.eval(inst);
@@ -142,7 +144,7 @@ impl<'a> EvalContext<'a> {
         };
         match result {
             UnwindResult::Recurse(x) => { self.push(x); self.unwind(); },
-            UnwindResult::Jump(target, s) => { println!("Jumping to {}", s); self.pc = target; },
+            UnwindResult::Jump(target, s) => { self.log.print_jump(s); self.pc = target; },
             UnwindResult::Die => panic!("invalid application"),
         };
     }
@@ -236,12 +238,12 @@ impl<'a> EvalContext<'a> {
         if !is_whnf(self.top()) {
             Some(Response::RequestEval(self.pop()))
         } else {
-            println!("Node already in normal form.");
+            self.log.print_eval_unnecessary();
             None
         }
     }
 
-    fn print_stack(&self) {
+    pub fn print_stack(&self) {
         println!("Vector contents:");
         for (i, n) in self.stack.iter().enumerate() {
             match **n {
