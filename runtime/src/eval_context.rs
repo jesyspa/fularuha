@@ -200,6 +200,7 @@ impl<'a> EvalContext<'a> {
         if !is_whnf(self.top()) {
             Some(Response::RequestEval(self.pop()))
         } else {
+            println!("Node already in normal form.");
             None
         }
     }

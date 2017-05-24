@@ -55,4 +55,13 @@ strictDefs =
     , ExecBuiltin Branch
     , Slide 4
     , Unwind
+    , Label "$seq"
+    , PushRelative 2
+    , GetRight
+    , Eval
+    , PushRelative 2
+    , GetRight
+    , MakeApp
+    , Slide 3
+    , Unwind
     ] ++ concatMap (uncurry binaryOp) [("$mul", Mul), ("$add", Add), ("$sub", Sub), ("$less_than", LessThan), ("$equal", Equal)]
