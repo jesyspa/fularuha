@@ -1,0 +1,4 @@
+add a b = a + sum b;
+sum xs = $match_list xs 0 add;
+list = $cons 5 ($cons 6 $nil);
+main = $print (sum list)

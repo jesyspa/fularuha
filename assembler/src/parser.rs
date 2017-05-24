@@ -24,6 +24,7 @@ peg! parser(r#"
         / KEYWORD<"push relative"> n:num_usize { Inst::PushRelative(n) }
         / KEYWORD<"push right of relative"> n:num_usize { Inst::PushRelativeRight(n) }
         / KEYWORD<"push jump"> n:num_usize { Inst::PushJump(n, String::from("$$")) }
+        / KEYWORD<"mem alloc"> con:num_usize size:num_usize { Inst::MemAlloc(con, size) }
         / KEYWORD<"make app"> { Inst::MakeApp }
         / KEYWORD<"unwind"> { Inst::Unwind }
         / KEYWORD<"slide"> n:num_usize { Inst::Slide(n) }
@@ -47,6 +48,7 @@ peg! parser(r#"
         / KEYWORD<"equal"> { Op::Equal }
         / KEYWORD<"less than"> { Op::LessThan }
         / KEYWORD<"branch"> { Op::Branch }
+        / KEYWORD<"switch"> n:num_usize { Op::Switch(n) }
         / KEYWORD<"print"> { Op::Print }
         / #expected("built-in operation")
     bool -> bool

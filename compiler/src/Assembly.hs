@@ -13,16 +13,18 @@ data Op = Print
         | Equal
         | LessThan
         | Branch
+        | Switch Integer
         deriving (Eq, Ord, Read, Show)
 
 ppOp :: Op -> Doc
-ppOp Print    = text "print"
-ppOp Add      = text "add"
-ppOp Mul      = text "mul"
-ppOp Sub      = text "sub"
-ppOp Equal    = text "equal"
-ppOp LessThan = text "less than"
-ppOp Branch   = text "branch"
+ppOp Print      = text "print"
+ppOp Add        = text "add"
+ppOp Mul        = text "mul"
+ppOp Sub        = text "sub"
+ppOp Equal      = text "equal"
+ppOp LessThan   = text "less than"
+ppOp Branch     = text "branch"
+ppOp (Switch n) = text "switch" <+> integer n
 
 
 data ASM = Label String
@@ -30,6 +32,7 @@ data ASM = Label String
          | PushConstant Integer
          | PushBoolConstant Bool
          | PushRelative Integer
+         | MemAlloc Integer Integer
          | MakeApp
          | Unwind
          | Slide Integer
@@ -46,6 +49,7 @@ ppASM (PushLabelJump xs) = text "push goto" <+> text xs
 ppASM (PushConstant i) = text "push constant" <+> integer i
 ppASM (PushBoolConstant b) = text "push bool constant" <+> text (if b then "true" else "false")
 ppASM (PushRelative i) = text "push relative" <+> integer i
+ppASM (MemAlloc con size) = text "mem alloc" <+> integer con <+> integer size
 ppASM MakeApp = text "make app"
 ppASM Unwind = text "unwind"
 ppASM (Slide i) = text "slide" <+> integer i

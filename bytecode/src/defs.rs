@@ -6,6 +6,7 @@ pub enum Op {
     Equal,
     LessThan,
     Branch,
+    Switch(usize),
     Print
 }
 
@@ -17,6 +18,8 @@ pub enum Inst {
     PushRelative(usize),
     PushRelativeRight(usize),
     PushJump(usize, String),
+    // Constructor, number of args
+    MemAlloc(usize, usize),
     MakeApp,
     Unwind,
     Slide(usize),

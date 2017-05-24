@@ -1,12 +1,15 @@
 use std::rc::Rc;
 use bytecode::{Inst, Op};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub enum Node<'a> {
     App(Rc<Node<'a>>, Rc<Node<'a>>),
     Num(i32),
     Bool(bool),
+    // Target and a debug string
     Jump(usize, &'a str),
+    // Constructor index and list of members.
+    Struct(usize, Vec<Rc<Node<'a>>>),
 }
 
 #[derive(Debug)]
@@ -25,6 +28,7 @@ fn is_whnf(node: &Rc<Node>) -> bool {
     match **node {
         Node::Num(_) => true,
         Node::Bool(_) => true,
+        Node::Struct(_, _) => true,
         _ => false
     }
 }
@@ -49,6 +53,7 @@ impl<'a> EvalContext<'a> {
             Inst::PushRelative(x) => { self.push_relative(x); None },
             Inst::PushRelativeRight(x) => { self.push_relative(x); self.get_right(); None },
             Inst::PushJump(x, ref s) => { self.push_jump(x, s.as_str()); None },
+            Inst::MemAlloc(con, size) => { self.mem_alloc(con, size); None },
             Inst::MakeApp => { self.make_app(); None },
             Inst::Unwind => self.unwind(),
             Inst::Slide(x) => { self.slide(x); None },
@@ -93,6 +98,14 @@ impl<'a> EvalContext<'a> {
 
     fn push_jump(&mut self, n: usize, s: &'a str) {
         self.push(Rc::new(Node::Jump(n, s)));
+    }
+
+    fn mem_alloc(&mut self, con: usize, size: usize) {
+        let mut mems: Vec<Rc<Node<'a>>> = Vec::new();
+        for _ in 0..size {
+            mems.push(self.pop());
+        }
+        self.push(Rc::new(Node::Struct(con, mems)));
     }
 
     fn make_app(&mut self) {
@@ -188,6 +201,28 @@ impl<'a> EvalContext<'a> {
                 let a = self.pop_num();
                 println!("{}", a);
             }
+            Op::Switch(n) => {
+                if let Node::Struct(con, ref data) = *self.pop() {
+                    // This feels a bit too complicated for one instruction, though partially
+                    // that's just due to how it's expressed in Rust.  Clean it up sometime?
+                    for _ in 0..con {
+                        self.pop();
+                    }
+                    let handler = self.pop();
+                    for _ in (con+1)..n {
+                        self.pop();
+                    }
+                    for x in data.iter().rev() {
+                        self.push(x.clone());
+                    }
+                    self.push(handler);
+                    for _ in 0..data.len() {
+                        self.make_app();
+                    }
+                } else {
+                    panic!("matching on non-struct");
+                }
+            }
         };
     }
 
@@ -210,7 +245,7 @@ impl<'a> EvalContext<'a> {
         for (i, n) in self.stack.iter().enumerate() {
             match **n {
                 Node::App(ref left, ref right) =>
-                    if i + 1 != self.stack.len() && self.stack[i+1] == *left {
+                    if i + 1 != self.stack.len() && Rc::ptr_eq(&self.stack[i+1], left) {
                         println!("-> App(..., {:?})", right);
                     } else {
                         println!("-> {:?}", n);
@@ -247,5 +282,4 @@ impl<'a> EvalContext<'a> {
             panic!("expected number");
         }
     }
-
 }
