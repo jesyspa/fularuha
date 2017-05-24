@@ -1,0 +1,7 @@
+primitive $print;
+primitive $add;
+data List = Nil 0 | Cons 2;
+list = Cons 5 (Cons 6 (Cons 7 Nil));
+add a b = a + sum b;
+sum xs = List xs 0 add;
+main = $print (sum list)

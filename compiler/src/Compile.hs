@@ -4,68 +4,46 @@ module Compile (
 
 import AST
 import Assembly
-import Data.List (elemIndex)
+import Builtins
+import SymbolTable as ST
+
+import Control.Monad.Reader
+
+(<$$>) :: Functor f => f a -> (a -> b) -> f b
+(<$$>) = flip (<$>)
 
 compile :: FileAST -> [ASM]
-compile (File xs) = [PushLabelJump "main", Unwind] ++ concatMap compDecl xs ++ strictDefs
+compile file = runReader (compFile file) (buildSymbolTable file)
 
-compDecl :: DeclAST -> [ASM]
-compDecl (Decl n args body) = Label n : compExpr args 0 body ++ [Slide (fromIntegral $ length args + 1), Unwind]
+compFile :: FileAST -> Reader SymbolTable [ASM]
+compFile (File decls) = (\xs -> [PushLabelJump "main", Unwind] ++ concat xs ++ builtinDefs) <$> mapM compDecl decls
 
-compExpr :: [Var] -> Int -> ExprAST -> [ASM]
-compExpr xs n (FunApl lhs rhs) = compExpr xs n rhs ++ compExpr xs (n+1) lhs ++ [MakeApp]
-compExpr xs n (VarUse x) = case elemIndex x xs of
-                                Just i -> [PushArg $ fromIntegral $ n+i+1]
-                                Nothing -> [PushLabelJump x]
-compExpr _ _  (Num i) = [PushConstant i]
-compExpr _ _  (Bool b) = [PushBoolConstant b]
+compDecl :: DeclAST -> Reader SymbolTable [ASM]
+compDecl (Decl n args body) = do
+    code <- withReader (register args) $ compExpr 0 body
+    return $ Label n : code ++ [Slide (fromIntegral $ length args + 1), Unwind]
+compDecl (Prim _) = return []
+compDecl (Data tn cons) = do
+    xs <- mapM (uncurry $ compCons tn) $ zip [0..] cons
+    let argc = fromIntegral $! length cons
+        args = replicate argc (PushArg $ argc+1)
+        dtor = [Label $ "$dtor_" ++ tn] ++ args ++ [PushArgStrict $ argc+1, ExecBuiltin (Switch argc), Slide $ argc+2, Unwind]
+    return $ dtor ++ concat xs
 
-binaryOp :: String -> Op -> [ASM]
-binaryOp name op =
-    [ Label name
-    , PushArgStrict 2
-    , PushArgStrict 2
-    , ExecBuiltin op
-    , Slide 3
-    , Return
-    ]
+compCons :: String -> Integer -> ConsAST -> Reader SymbolTable [ASM]
+compCons _ i (Constructor x s) = return $ [Label label] ++ args ++ [MemAlloc i s, Slide (s+1), Return]
+    where label = "$ctor_" ++ x
+          args = replicate (fromIntegral s) (PushArg $ s)
 
-strictDefs :: [ASM]
-strictDefs =
-    [ Label "$print"
-    , PushArgStrict 1
-    , PushRelative 0
-    , ExecBuiltin Print
-    , Slide 2
-    , Return
-    , Label "$branch"
-    , PushArg 3
-    , PushArg 3
-    , PushArgStrict 3
-    , ExecBuiltin Branch
-    , Slide 4
-    , Unwind
-    , Label "$seq"
-    , PushArgStrict 2
-    , PushArg 2
-    , MakeApp
-    , Slide 3
-    , Unwind
-    , Label "$nil"
-    , MemAlloc 0 0
-    , Slide 1
-    , Return
-    , Label "$cons"
-    , PushArg 2
-    , PushArg 2
-    , MemAlloc 1 2
-    , Slide 3
-    , Return
-    , Label "$match_list"
-    , PushArg 3
-    , PushArg 3
-    , PushArgStrict 3
-    , ExecBuiltin (Switch 2)
-    , Slide 4
-    , Unwind
-    ] ++ concatMap (uncurry binaryOp) [("$mul", Mul), ("$add", Add), ("$sub", Sub), ("$less_than", LessThan), ("$equal", Equal)]
+compExpr :: Integer -> ExprAST -> Reader SymbolTable [ASM]
+compExpr n (FunApl lhs rhs) = (\x y -> x ++ y ++ [MakeApp]) <$> compExpr n rhs <*> compExpr (n+1) lhs
+compExpr n (VarUse x) = asks (ST.lookup x) <$$> \response ->
+    case response of
+        Global -> [PushLabelJump x]
+        Local i -> [PushArg $ n+i+1]
+        Type -> [PushLabelJump $ "$dtor_" ++ x]
+        TypeConstructor _ -> [PushLabelJump $ "$ctor_" ++ x]
+        NotFound -> error $ "name not found: " ++ x
+compExpr _  (Num i) = return [PushConstant i]
+compExpr _  (Bool b) = return [PushBoolConstant b]
+

@@ -1,2 +1,3 @@
+primitive $print;
 main = f 5;
 f x = $print x

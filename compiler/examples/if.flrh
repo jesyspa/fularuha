@@ -1,1 +1,3 @@
+primitive $print;
+primitive $branch;
 main = $print if true then 5 else 7

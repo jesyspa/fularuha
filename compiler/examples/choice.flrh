@@ -1,4 +1,6 @@
-true x y = x;
-false x y = y;
-if b x y = b x y;
-main = $print (if true 5 7)
+primitive $print;
+primitive $branch;
+t x y = x;
+f x y = y;
+choice b x y = b x y;
+main = $print (choice t 5 7)

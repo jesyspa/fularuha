@@ -1,3 +1,10 @@
+primitive $print;
+primitive $branch;
+primitive $equal;
+primitive $add;
+primitive $sub;
+primitive $mul;
+primitive $seq;
 factiter n i = if n == 0 then i else $seq ($seq factiter (n-1)) (i*n);
 fact n = factiter n 1;
 main = $print (fact 5)

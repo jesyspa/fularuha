@@ -22,7 +22,7 @@ lexer = Tok.makeTokenParser $ Tok.LanguageDef {
     Tok.identLetter = alphaNum <|> char '_',
     Tok.opStart = oper,
     Tok.opLetter = oper,
-    Tok.reservedNames = ["let", "in", "case", "of", "print", "true", "false", "if", "then", "else"],
+    Tok.reservedNames = ["let", "in", "case", "of", "true", "false", "if", "then", "else", "primitive", "data"],
     Tok.reservedOpNames = ["=", "==", "*", "+", "-", "<"],
     Tok.caseSensitive = True
 }
@@ -39,6 +39,12 @@ file :: Parsec String u FileAST
 file = File <$ whitespace <*> semiSep decl
 decl :: Parsec String u DeclAST
 decl = Decl <$> var <*> many var <* reservedOp "=" <*> expr
+    <|> Prim <$ reserved "primitive" <*> var
+    <|> Data <$ reserved "data" <*> identifier <* reservedOp "=" <*> sepBy1 constructor (reservedOp "|")
+
+constructor :: Parsec String u ConsAST
+constructor = Constructor <$> identifier <*> natural
+
 expr :: Parsec String u ExprAST
 expr = Ex.buildExpressionParser table exprSeq
 exprSeq :: Parsec String u ExprAST

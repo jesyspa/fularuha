@@ -1,1 +1,3 @@
+primitive $print;
+primitive $mul;
 main = $print (2*3)

@@ -1,1 +1,2 @@
+primitive $print;
 main = $print 5
