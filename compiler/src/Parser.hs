@@ -48,13 +48,13 @@ constructor = Constructor <$> identifier <*> natural
 expr :: Parsec String u ExprAST
 expr = Ex.buildExpressionParser table exprSeq
 exprSeq :: Parsec String u ExprAST
-exprSeq = chainl1 exprPart (return FunApl)
+exprSeq = chainl1 exprPart (return FunApp)
 exprPart :: Parsec String u ExprAST
 exprPart = parens expr
         <|> VarUse <$> var
         <|> reserved "true" *> return (Bool True)
         <|> reserved "false" *> return (Bool False)
-        <|> (\x y z -> FunApl (FunApl (FunApl (VarUse "$branch") x) y) z)
+        <|> (\x y z -> FunApp (FunApp (FunApp (VarUse "$branch") x) y) z)
             <$ reserved "if"
             <*> expr
             <* reserved "then"
@@ -68,7 +68,7 @@ table = [ [ Infix (opParser "*" "$mul") AssocLeft]
           , Infix (opParser "-" "$sub") AssocLeft]
         , [ Infix (opParser "==" "$equal") AssocNone
           , Infix (opParser "<" "$less_than") AssocNone]]
-    where funAppl2 c x y = FunApl (FunApl (VarUse c) x) y
+    where funAppl2 c x y = FunApp (FunApp (VarUse c) x) y
           opParser sym name = reservedOp sym >> return (funAppl2 name)
 
 var :: Parsec String u Var

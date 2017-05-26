@@ -19,7 +19,7 @@ data DeclAST = Decl Var [Var] ExprAST
 data ConsAST = Constructor Var Integer
              deriving (Eq, Ord, Read, Show)
 
-data ExprAST = FunApl ExprAST ExprAST
+data ExprAST = FunApp ExprAST ExprAST
              | VarUse Var
              | Num Integer
              | Bool Bool

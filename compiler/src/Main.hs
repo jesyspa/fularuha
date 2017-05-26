@@ -7,6 +7,7 @@ import Parser (parse)
 import Compile (compile)
 import Assembly (ppASMs)
 import Text.PrettyPrint (render)
+import Annotate (annotate)
 
 data Config = Config
     { inFilePath :: FilePath
@@ -27,7 +28,8 @@ main = do
     cfg <- execParser argParser
     xs <- readFile (inFilePath cfg)
     let ast = parse xs
-    let code = compile ast
+    let typedAst = annotate ast
+    let code = compile typedAst
     let output = render . ppASMs $ code
     writeFile (outFilePath cfg) output
 
