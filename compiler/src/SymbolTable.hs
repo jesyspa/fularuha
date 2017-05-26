@@ -51,7 +51,7 @@ buildSymbolTable (File xs) = SymbolTable [] (mconcat $ map buildDeclST xs)
 buildDeclST :: DeclAST -> GlobalSymbolTable
 buildDeclST (Decl fun _ _) = mkGlobal fun
 buildDeclST (Prim prim) = mkGlobal prim
-buildDeclST (Data tn cons) = mkType tn <> mconcat (map buildConsST cons)
+buildDeclST (Data tn cons) = mkType tn <> mkGlobal ("$dtor_" ++ tn) <> mconcat (map buildConsST cons)
 
 buildConsST :: ConsAST -> GlobalSymbolTable
 buildConsST (Constructor name arity) = mkTypeConstructor name arity

@@ -41,7 +41,7 @@ compExpr n (VarUse x) = asks (ST.lookup x) <$$> \response ->
     case response of
         Global -> [PushLabelJump x]
         Local i -> [PushArg $ n+i+1]
-        Type -> [PushLabelJump $ "$dtor_" ++ x]
+        Type -> error $ "unexpected type"
         TypeConstructor _ -> [PushLabelJump $ "$ctor_" ++ x]
         NotFound -> error $ "name not found: " ++ x
 compExpr _  (Num i) = return [PushConstant i]
