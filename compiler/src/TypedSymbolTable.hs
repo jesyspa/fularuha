@@ -14,10 +14,10 @@ import Control.Applicative
 import qualified Data.Map as M
 
 data Entry tp = Entry Var tp
-           deriving (Eq, Ord, Read, Show)
+           deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
 data SymbolTable tp = SymbolTable (M.Map Var (Entry tp)) [Entry tp]
-                    deriving (Eq, Ord, Read, Show)
+                    deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
 instance Monoid (SymbolTable tp) where
     mempty = SymbolTable M.empty []

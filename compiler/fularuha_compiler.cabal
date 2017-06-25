@@ -15,4 +15,5 @@ executable main
   hs-source-dirs: src/
   ghc-options: -Wall
   default-language: Haskell2010
-  default-extensions: NoMonomorphismRestriction, TypeOperators
+  default-extensions: NoMonomorphismRestriction, TypeOperators, DeriveFunctor,
+    FlexibleContexts, DeriveFoldable, DeriveTraversable
